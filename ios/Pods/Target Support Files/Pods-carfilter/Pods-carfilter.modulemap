@@ -1,0 +1,6 @@
+module Pods_carfilter {
+  umbrella header "Pods-carfilter-umbrella.h"
+
+  export *
+  module * { export * }
+}
