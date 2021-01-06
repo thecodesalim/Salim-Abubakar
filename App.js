@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
+import UUIDGenerator from 'react-native-uuid-generator';
 
 import {StyleSheet, Text, View, Pressable, Button} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
@@ -11,11 +12,19 @@ import {ScrollView} from 'react-native-gesture-handler';
 function Display(props) {
   return (
     <View>
-      <Text style={styles.header}>Filters</Text>
       {props.filter.map((filter) => (
         <View style={styles.filterCard} key={filter.id}>
           <View styles={styles.filterText}>
-            <Pressable onPress={props.onPress}>
+            <Pressable
+              onPress={() =>
+                props.navigation.navigate('Cars', {
+                  startYear: filter.start_year,
+                  endYear: filter.end_year,
+                  gender: filter.gender,
+                  countries: filter.countries,
+                  colours: filter.colors,
+                })
+              }>
               <Text> Start year: {filter.start_year}</Text>
               <Text> End year: {filter.end_year}</Text>
               <Text> Gender:{filter.gender}</Text>
@@ -32,24 +41,19 @@ function Display(props) {
 function Cars(props) {
   return (
     <View>
-      <Text>Cars</Text>
-      <Button
-        onPress={props.onPress}
-        title="More"
-        color="#841584"
-        accessibilityLabel="Learn more about this purple button"
-      />
       <ScrollView>
         {props.filtered.map((filter) => (
           <View style={styles.carFilter} key={filter.id}>
             <Text> {`${filter.first_name} ${filter.last_name}`}</Text>
+            <Text> {filter.gender}</Text>
             <Text> {filter.job_title}</Text>
             <Text> {filter.email}</Text>
-            <Text> {filter.country}</Text>
             <Text>
               {`${filter.car_model} ${filter.car_model_year} ${filter.car_color}`}
             </Text>
             <Text> {filter.country}</Text>
+            <Text> {filter.country}</Text>
+            <Text> {filter.bio}</Text>
           </View>
         ))}
       </ScrollView>
@@ -70,17 +74,27 @@ function HomeScreen({navigation}) {
     );
     const filters = await response.json();
     setData(data.concat(filters));
-    //console.log(filters[0].countries)
   };
   return (
     <View style={styles.container}>
-      <Display filter={data} onPress={() => navigation.navigate('Cars')} />
+      <Text style={styles.header}>Filters</Text>
+      <Display filter={data} navigation={navigation} />
     </View>
   );
 }
 
-function FilterScreen() {
+function FilterScreen({route, navigation}) {
   const [data, setData] = React.useState([]);
+  const [filteredData, setfilteredData] = React.useState([]);
+  const {startYear, endYear, gender, countries, colours} = route.params;
+
+  React.useEffect(() => {
+    loadAllCSV();
+  }, []);
+
+  const logger = () => {
+    console.log(data);
+  };
 
   const loadAllCSV = () => {
     var mainBundlePath = RNFS.MainBundlePath;
@@ -91,23 +105,23 @@ function FilterScreen() {
       download: true,
       header: true,
       complete: (results) => {
-        const array = [
-          'Brazil',
-          'Ireland',
-          'Egypt',
-          'Poland',
-          'Niger',
-          'Greece',
-          'Peru',
-        ];
         setData(
           data.concat(
             results.data
-              .filter((x) => array.includes(x.country))
-              .filter((x) => x.car_model_year > 1991 && x.car_model_year < 2009)
-              .filter((x) => x.gender.toLowerCase() === 'male'.toLowerCase())
-              .filter((x) =>
-                ['Green', 'Violet', 'Yellow', 'Blue'].includes(x.car_color),
+              .filter(
+                (x) => countries.length === 0 || countries.includes(x.country),
+              )
+              .filter(
+                (x) =>
+                  (!startYear || x.car_model_year >= startYear) &&
+                  (!endYear || x.car_model_year <= endYear),
+              )
+              .filter(
+                (x) =>
+                  !gender || x.gender.toLowerCase() === gender.toLowerCase(),
+              )
+              .filter(
+                (x) => colours.length === 0 || colours.includes(x.car_color),
               ),
           ),
         );
@@ -118,7 +132,14 @@ function FilterScreen() {
 
   return (
     <View style={styles.container}>
-      <Cars filtered={data} onPress={loadAllCSV} />
+      <Text style={styles.header}>Cars</Text>
+      <Button
+        onPress={logger}
+        title="More"
+        color="#841584"
+        accessibilityLabel="Learn more about this purple button"
+      />
+      <Cars filtered={data} />
     </View>
   );
 }
@@ -154,7 +175,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: 10,
     width: 350,
-    height: 110,
+    height: 10,
     backgroundColor: '#ebebeb',
     borderRadius: 10,
   },
@@ -167,7 +188,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 10,
     width: 350,
-    height: 150,
+    height: 400,
     backgroundColor: '#ebebeb',
     borderRadius: 10,
   },
