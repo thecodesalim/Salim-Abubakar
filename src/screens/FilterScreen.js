@@ -12,28 +12,25 @@ export default function FilterScreen({route, navigation}) {
     loadAllCSV();
   }, []);
 
+  const filterCV = (results) => {
+    return results.data
+      .filter(
+        (item) => countries.length === 0 || countries.includes(item.country),
+      )
+      .filter(
+        (item) =>
+          (!startYear || item.car_model_year >= startYear) &&
+          (!endYear || item.car_model_year <= endYear),
+      )
+      .filter(
+        (item) => !gender || item.gender.toLowerCase() === gender.toLowerCase(),
+      )
+      .filter(
+        (item) => colours.length === 0 || colours.includes(item.car_color),
+      );
+  };
   const searchCV = (results) => {
-    setData(
-      data.concat(
-        results.data
-          .filter(
-            (item) =>
-              countries.length === 0 || countries.includes(item.country),
-          )
-          .filter(
-            (item) =>
-              (!startYear || item.car_model_year >= startYear) &&
-              (!endYear || item.car_model_year <= endYear),
-          )
-          .filter(
-            (item) =>
-              !gender || item.gender.toLowerCase() === gender.toLowerCase(),
-          )
-          .filter(
-            (item) => colours.length === 0 || colours.includes(item.car_color),
-          ),
-      ),
-    );
+    setData(data.concat(filterCV(results)));
   };
 
   const loadAllCSV = () => {
